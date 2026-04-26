@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Banco Digital — Chatbot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #app {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      background: #fff;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 240px;
+      min-width: 240px;
+      background: #f8f8f6;
+      border-right: 1px solid #e5e5e0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sidebar-header {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid #e5e5e0;
+    }
+
+    #sidebar-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a18;
+    }
+
+    #sidebar-header p {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    #quick-cmds {
+      padding: 14px 10px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    #quick-cmds .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #aaa;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+
+    .cmd-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #555;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .cmd-btn:hover {
+      background: #eceae3;
+      color: #1a1a18;
+    }
+
+    .cmd-icon { font-size: 15px; width: 20px; text-align: center; }
+
+    #sidebar-footer {
+      padding: 14px 18px;
+      border-top: 1px solid #e5e5e0;
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    /* ── Main ── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #topbar {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e5e0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+    }
+
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #3a7d2c; }
+
+    #topbar h3 { font-size: 15px; font-weight: 600; color: #1a1a18; }
+    #topbar span { font-size: 12px; color: #aaa; margin-left: 4px; }
+
+    /* ── Chat ── */
+    #chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #fafaf8;
+    }
+
+    .msg-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .msg-wrap.user { align-items: flex-end; }
+    .msg-wrap.bot  { align-items: flex-start; }
+
+    .msg {
+      max-width: 72%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .msg.bot {
+      background: #fff;
+      border: 1px solid #e5e5e0;
+      border-bottom-left-radius: 4px;
+      color: #1a1a18;
+    }
+
+    .msg.user {
+      background: #185fa5;
+      color: #e6f1fb;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-time {
+      font-size: 10px;
+      color: #bbb;
+      margin-top: 3px;
+      padding: 0 2px;
+    }
+
+    /* ── Cards de resultado ── */
+    .result-card {
+      background: #fff;
+      border: 1px solid #e5e5e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .result-card .card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 12px;
+      border-bottom: 1px solid #f0f0ec;
+    }
+
+    .result-card .card-row:last-child { border-bottom: none; }
+
+    .result-card .card-row .lbl { color: #888; font-size: 12px; }
+    .result-card .card-row .val { font-weight: 500; color: #1a1a18; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge.ativo    { background: #eaf3de; color: #27500a; }
+    .badge.bloqueado{ background: #fcebeb; color: #791f1f; }
+
+    .prog-bar {
+      height: 5px;
+      background: #f0f0ec;
+      border-radius: 3px;
+      margin: 4px 0 2px;
+      overflow: hidden;
+    }
+
+    .prog-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+    /* ── Relatório ── */
+    .rel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .rel-item {
+      background: #f8f8f6;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .rel-item .rel-val { font-size: 20px; font-weight: 600; color: #1a1a18; }
+    .rel-item .rel-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+
+    /* ── Sugestões ── */
+    .sugestoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+      padding: 0 2px;
+    }
+
+    .tag {
+      background: #fff;
+      border: 1px solid #d8d8d4;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag:hover { background: #e8f0fb; border-color: #185fa5; color: #185fa5; }
+
+    /* ── Input ── */
+    #input-area {
+      padding: 14px 20px;
+      border-top: 1px solid #e5e5e0;
+      display: flex;
+      gap: 10px;
+      background: #fff;
+    }
+
+    #msg-input {
+      flex: 1;
+      padding: 10px 16px;
+      border: 1px solid #ddd;
+      border-radius: 24px;
+      font-size: 14px;
+      color: #1a1a18;
+      background: #f8f8f6;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #msg-input:focus { border-color: #185fa5; background: #fff; }
+
+    #send-btn {
+      padding: 10px 22px;
+      background: #185fa5;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    #send-btn:hover { background: #0c447c; }
+    #send-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* ── Loading ── */
+    .loading-dots { display: flex; gap: 4px; padding: 4px 0; }
+    .loading-dots span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #bbb; animation: bounce 1.2s infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+    }
+
+    /* ── Responsivo ── */
+    @media (max-width: 640px) {
+      #sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <h2>Banco Digital</h2>
+      <p>Chatbot Bancário v2.0</p>
+    </div>
+
+    <div id="quick-cmds">
+      <p class="section-label">Consultas</p>
+      <button class="cmd-btn" onclick="sendCmd('consultar fatura')">
+        <span class="cmd-icon">📄</span> Consultar fatura
+      </button>
+      <button class="cmd-btn" onclick="sendCmd('listar clientes')">
+        <span class="cmd-icon">👥</span> Listar clientes
+      </button>
+      <button class="cmd-btn" onclick="sendCmd('relatório geral')">
+        <span class="cmd-icon">📊</span> Relatório geral
+      </button>
+
+      <p class="section-label" style="margin-top:16px">Operações</p>
+      <button class="cmd-btn" onclick="sendCmd('nova compra')">
+        <span class="cmd-icon">🛒</span> Nova compra
+      </button>
+      <button class="cmd-btn" onclick="sendCmd('bloquear cartão')">
+        <span class="cmd-icon">🔒</span> Bloquear cartão
+      </button>
+      <button class="cmd-btn" onclick="sendCmd('desbloquear cartão')">
+        <span class="cmd-icon">🔓</span> Desbloquear cartão
+      </button>
+      <button class="cmd-btn" onclick="sendCmd('adicionar cliente')">
+        <span class="cmd-icon">➕</span> Adicionar cliente
+      </button>
+
+      <p class="section-label" style="margin-top:16px">Ajuda</p>
+      <button class="cmd-btn" onclick="sendCmd('ajuda')">
+        <span class="cmd-icon">❓</span> Ver comandos
+      </button>
+    </div>
+
+    <div id="sidebar-footer">
+      Sistema interno • v2.0
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="topbar">
+      <div class="status-dot"></div>
+      <h3>Assistente Bancário</h3>
+      <span>online</span>
+    </div>
+
+    <div id="chat-area"></div>
+
+    <div id="input-area">
+      <input
+        id="msg-input"
+        placeholder="Digite um comando, nome ou CPF..."
+        onkeydown="if(event.key==='Enter') enviar()"
+        autocomplete="off"
+      />
+      <button id="send-btn" onclick="enviar()">Enviar</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Estado do fluxo ────────────────────────────────────────────────────
+  let estado = { aguardando: null, dados: {} };
+
+  // ── Utilitários ────────────────────────────────────────────────────────
+  function agora() {
+    return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function fmt(v) {
+    return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function pct(usado, total) {
+    return total > 0 ? Math.round((usado / total) * 100) : 0;
+  }
+
+  // ── Renderização de mensagens ──────────────────────────────────────────
+  function addMsg(conteudo, tipo, isHTML = false) {
+    const area = document.getElementById('chat-area');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-wrap ' + tipo;
+
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + tipo;
+    if (isHTML) msg.innerHTML = conteudo;
+    else msg.textContent = conteudo;
+
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = agora();
+
+    wrap.appendChild(msg);
+    wrap.appendChild(time);
+    area.appendChild(wrap);
+    area.scrollTop = area.scrollHeight;
+    return msg;
+  }
+
+  function addLoading() {
+    const area = document.getElementById('chat-area');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-wrap bot';
+    wrap.id = 'loading-msg';
+    wrap.innerHTML = '<div class="msg bot"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+    area.appendChild(wrap);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function removeLoading() {
+    const el = document.getElementById('loading-msg');
+    if (el) el.remove();
+  }
+
+  function addSugestoes(lista) {
+    const area = document.getElementById('chat-area');
+    const div = document.createElement('div');
+    div.className = 'sugestoes';
+    lista.forEach(s => {
+      const t = document.createElement('span');
+      t.className = 'tag';
+      t.textContent = s;
+      t.onclick = () => { sendCmd(s); div.remove(); };
+      div.appendChild(t);
+    });
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  // ── Templates de card ──────────────────────────────────────────────────
+  function cardCliente(c) {
+    const usado = c.limite_total - c.limite_disponivel;
+    const p = pct(usado, c.limite_total);
+    const cor = p > 80 ? '#a32d2d' : '#185fa5';
+    const transList = (c.transacoes && c.transacoes.length > 0)
+      ? c.transacoes.map(t =>
+          `<div class="card-row"><span class="lbl">${t.descricao} <span style="color:#bbb;font-size:11px">${t.data}</span></span><span class="val">${fmt(t.valor)}</span></div>`
+        ).join('')
+      : '<div class="card-row"><span class="lbl" style="color:#bbb">Nenhuma transação</span></div>';
+
+    return `
+      <strong style="font-size:14px">${c.nome}</strong>
+      <div class="result-card" style="margin-top:8px">
+        <div class="card-row"><span class="lbl">Cartão</span><span class="val">${c.numero_cartao}</span></div>
+        <div class="card-row"><span class="lbl">Limite total</span><span class="val">${fmt(c.limite_total)}</span></div>
+        <div class="card-row"><span class="lbl">Limite disponível</span><span class="val" style="color:#0c447c">${fmt(c.limite_disponivel)}</span></div>
+        <div class="card-row"><span class="lbl">Fatura atual</span><span class="val" style="color:${c.fatura_atual > c.limite_total * 0.7 ? '#a32d2d' : '#185fa5'}">${fmt(c.fatura_atual)}</span></div>
+        <div class="card-row"><span class="lbl">Venc. fatura</span><span class="val">${c.vencimento_fatura}</span></div>
+        <div class="card-row"><span class="lbl">Status</span><span class="val"><span class="badge ${c.status_cartao}">${c.status_cartao}</span></span></div>
+        <div style="padding:8px 12px 10px">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px">Uso do limite: ${p}%</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${cor}"></div></div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;font-weight:600;color:#888;padding-left:2px">Últimas transações</div>
+      <div class="result-card">${transList}</div>
+    `;
+  }
+
+  // ── API calls ──────────────────────────────────────────────────────────
+  async function api(rota, metodo = 'GET', body = null) {
+    const opts = {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' }
+    };
+
+    if (body) opts.body = JSON.stringify(body);
+
+    const res = await fetch(rota, opts);
+
+    if (!res.ok) {
+      throw new Error('Erro HTTP: ' + res.status);
+    }
+
+    return res.json();
+  }
+
+  // ── Processamento de mensagens ─────────────────────────────────────────
+  async function processar(msg) {
+    const m = msg.trim().toLowerCase();
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+
+    // ── Fluxos com estado ──
+
+    if (estado.aguardando === 'cpf_consulta') {
+      estado.aguardando = null;
+      addLoading();
+      const data = await api(`/cliente/${encodeURIComponent(msg.trim())}`);
+      removeLoading();
+      if (data.erro) { addMsg('Cliente não encontrado. Verifique e tente novamente.', 'bot'); addSugestoes(['Listar clientes', 'Tentar outro CPF']); btn.disabled = false; return; }
+      addMsg(cardCliente(data), 'bot', true);
+      addSugestoes([`Bloquear cartão de ${data.nome}`, `Nova compra para ${data.nome}`, 'Listar clientes']);
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'cpf_bloqueio') {
+      estado.aguardando = null;
+      addLoading();
+      const data = await api('/bloquear', 'POST', { cpf: msg.trim() });
+      removeLoading();
+      if (data.erro) { addMsg('Erro: ' + data.erro, 'bot'); btn.disabled = false; return; }
+      addMsg(`✅ ${data.mensagem}`, 'bot');
+      addSugestoes(['Consultar fatura', 'Desbloquear cartão', 'Listar clientes']);
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'cpf_desbloqueio') {
+      estado.aguardando = null;
+      addLoading();
+      const data = await api('/desbloquear', 'POST', { cpf: msg.trim() });
+      removeLoading();
+      if (data.erro) { addMsg('Erro: ' + data.erro, 'bot'); btn.disabled = false; return; }
+      addMsg(`✅ ${data.mensagem}`, 'bot');
+      addSugestoes(['Consultar fatura', 'Listar clientes']);
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'compra_cpf') {
+      estado.dados.cpf = msg.trim();
+      estado.aguardando = 'compra_desc';
+      addMsg('Descrição da compra:', 'bot');
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'compra_desc') {
+      estado.dados.desc = msg.trim();
+      estado.aguardando = 'compra_valor';
+      addMsg('Valor da compra (ex: 150.00):', 'bot');
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'compra_valor') {
+      const val = parseFloat(msg.replace(',', '.'));
+      if (isNaN(val) || val <= 0) { addMsg('Valor inválido. Digite um número positivo (ex: 150.00).', 'bot'); btn.disabled = false; return; }
+      addLoading();
+      const data = await api('/compra', 'POST', { cpf: estado.dados.cpf, descricao: estado.dados.desc, valor: val });
+      removeLoading();
+      estado.aguardando = null; estado.dados = {};
+      if (data.erro) { addMsg('Recusada: ' + data.erro, 'bot'); btn.disabled = false; return; }
+      addMsg(`
+        <strong>Compra aprovada ✅</strong>
+        <div class="result-card" style="margin-top:8px">
+          <div class="card-row"><span class="lbl">Cliente</span><span class="val">${data.cliente}</span></div>
+          <div class="card-row"><span class="lbl">Descrição</span><span class="val">${estado.dados.desc || data.mensagem}</span></div>
+          <div class="card-row"><span class="lbl">Valor</span><span class="val" style="color:#185fa5">${fmt(data.valor)}</span></div>
+          <div class="card-row"><span class="lbl">Limite restante</span><span class="val">${fmt(data.limite_disponivel)}</span></div>
+          <div class="card-row"><span class="lbl">Nova fatura</span><span class="val">${fmt(data.fatura_atual)}</span></div>
+        </div>
+      `, 'bot', true);
+      addSugestoes(['Nova compra', 'Consultar fatura', 'Relatório geral']);
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'add_nome') {
+      estado.dados.nome = msg.trim();
+      estado.aguardando = 'add_cpf';
+      addMsg('CPF do cliente:', 'bot');
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'add_cpf') {
+      estado.dados.cpf = msg.trim();
+      estado.aguardando = 'add_limite';
+      addMsg('Limite total (ex: 5000):', 'bot');
+      btn.disabled = false; return;
+    }
+
+    if (estado.aguardando === 'add_limite') {
+      const lim = parseFloat(msg.replace(',', '.'));
+
+      if (isNaN(lim) || lim <= 0) {
+        addMsg('Limite inválido.', 'bot');
+        btn.disabled = false;
+        return;
+      }
+
+      try {
+        addLoading();
+
+        const sufixo = String(Math.floor(1000 + Math.random() * 9000));
+
+        const data = await api('/add', 'POST', {
+          nome: estado.dados.nome,
+          cpf: estado.dados.cpf,
+          limite_total: lim,
+          numero_cartao: `0000 **** **** ${sufixo}`,
+          vencimento_cartao: '12/2030',
+          vencimento_fatura: '10/05/2026'
+        });
+
+        removeLoading();
+
+        estado.aguardando = null;
+        estado.dados = {};
+
+        if (data.erro) {
+          addMsg('Erro: ' + data.erro, 'bot');
+          btn.disabled = false;
+          return;
+        }
+
+        addMsg(`✅ ${data.mensagem}`, 'bot');
+        addSugestoes(['Listar clientes', 'Adicionar outro cliente', 'Relatório geral']);
+      } catch (e) {
+        removeLoading();
+        addMsg('Erro de conexão com o servidor.', 'bot');
+      }
+
+      btn.disabled = false;
+      return;
+    }
+
+    // ── Comandos diretos ──
+
+    if (m.includes('listar') || m === 'clientes') {
+      addLoading();
+      const lista = await api('/clientes');
+      removeLoading();
+      const rows = lista.map(c =>
+        `<div class="card-row"><span class="lbl">${c.nome} <span style="color:#bbb;font-size:11px">${c.cpf}</span></span><span class="val"><span class="badge ${c.status_cartao}">${c.status_cartao}</span> &nbsp;${fmt(c.fatura_atual)}</span></div>`
+      ).join('');
+      addMsg(`<strong>${lista.length} clientes cadastrados</strong><div class="result-card" style="margin-top:8px">${rows}</div>`, 'bot', true);
+      addSugestoes(['Consultar fatura', 'Relatório geral']);
+      btn.disabled = false; return;
+    }
+
+    if (m.includes('consultar') || m.includes('fatura') || m.includes('limite')) {
+      addMsg('Informe o CPF ou nome do cliente:', 'bot');
+      estado.aguardando = 'cpf_consulta';
+      btn.disabled = false; return;
+    }
+
+    // ✅ PRIMEIRO desbloquear
+    if (m.includes('desbloquear')) {
+      addMsg('Informe o CPF ou nome do cliente para desbloquear:', 'bot');
+      estado.aguardando = 'cpf_desbloqueio';
+      btn.disabled = false; return;
+    }
+
+    // ✅ DEPOIS bloquear
+    if (m.includes('bloquear')) {
+      addMsg('Informe o CPF ou nome do cliente para bloquear:', 'bot');
+      estado.aguardando = 'cpf_bloqueio';
+      btn.disabled = false; return;
+    }
+
+    if (m.includes('compra') || m.includes('transação') || m.includes('transacao')) {
+      addMsg('CPF ou nome do cliente:', 'bot');
+      estado.aguardando = 'compra_cpf';
+      btn.disabled = false; return;
+    }
+
+    if (m.includes('adicionar') || m.includes('novo cliente') || m.includes('cadastrar')) {
+      addMsg('Nome completo do novo cliente:', 'bot');
+      estado.aguardando = 'add_nome';
+      btn.disabled = false; return;
+    }
+
+    if (m.includes('relatório') || m.includes('relatorio') || m.includes('relatório geral')) {
+      addLoading();
+      const r = await api('/relatorio');
+      removeLoading();
+      const uso = r.uso_percentual;
+      const cor = uso > 75 ? '#a32d2d' : '#185fa5';
+      addMsg(`
+        <strong>Relatório geral da carteira</strong>
+        <div class="rel-grid">
+          <div class="rel-item"><div class="rel-val">${r.total_clientes}</div><div class="rel-lbl">Total de clientes</div></div>
+          <div class="rel-item"><div class="rel-val">${r.ativos}</div><div class="rel-lbl">Cartões ativos</div></div>
+          <div class="rel-item"><div class="rel-val">${r.bloqueados}</div><div class="rel-lbl">Cartões bloqueados</div></div>
+          <div class="rel-item"><div class="rel-val">${r.total_transacoes}</div><div class="rel-lbl">Transações registradas</div></div>
+        </div>
+        <div class="result-card" style="margin-top:8px">
+          <div class="card-row"><span class="lbl">Limite total concedido</span><span class="val">${fmt(r.total_limite)}</span></div>
+          <div class="card-row"><span class="lbl">Total disponível</span><span class="val" style="color:#0c447c">${fmt(r.total_disponivel)}</span></div>
+          <div class="card-row"><span class="lbl">Faturas em aberto</span><span class="val" style="color:${r.total_faturas > r.total_limite * 0.5 ? '#a32d2d' : '#185fa5'}">${fmt(r.total_faturas)}</span></div>
+          <div style="padding:8px 12px 10px">
+            <div style="font-size:11px;color:#aaa;margin-bottom:4px">Uso médio dos limites: ${uso}%</div>
+            <div class="prog-bar"><div class="prog-fill" style="width:${uso}%;background:${cor}"></div></div>
+          </div>
+        </div>
+      `, 'bot', true);
+      addSugestoes(['Consultar fatura', 'Listar clientes']);
+      btn.disabled = false; return;
+    }
+
+    if (m.includes('ajuda') || m.includes('help') || m.includes('comandos')) {
+      addMsg(`
+        <strong>Comandos disponíveis</strong>
+        <div class="result-card" style="margin-top:8px">
+          <div class="card-row"><span class="lbl">consultar fatura</span><span class="val" style="color:#185fa5">Busca por CPF ou nome</span></div>
+          <div class="card-row"><span class="lbl">listar clientes</span><span class="val" style="color:#185fa5">Todos os clientes</span></div>
+          <div class="card-row"><span class="lbl">nova compra</span><span class="val" style="color:#185fa5">Lança transação</span></div>
+          <div class="card-row"><span class="lbl">bloquear cartão</span><span class="val" style="color:#a32d2d">Bloqueia cartão</span></div>
+          <div class="card-row"><span class="lbl">desbloquear cartão</span><span class="val" style="color:#27500a">Reativa cartão</span></div>
+          <div class="card-row"><span class="lbl">adicionar cliente</span><span class="val" style="color:#185fa5">Cadastro guiado</span></div>
+          <div class="card-row"><span class="lbl">relatório geral</span><span class="val" style="color:#185fa5">Visão da carteira</span></div>
+        </div>
+        <div style="font-size:12px;color:#aaa;margin-top:8px">Você também pode digitar o nome ou CPF diretamente.</div>
+      `, 'bot', true);
+      btn.disabled = false; return;
+    }
+
+    // Tenta como busca de cliente direto
+    if (msg.trim().length >= 3) {
+      addLoading();
+      const data = await api(`/cliente/${encodeURIComponent(msg.trim())}`);
+      removeLoading();
+      if (!data.erro) {
+        addMsg(cardCliente(data), 'bot', true);
+        addSugestoes([`Nova compra para ${data.nome}`, `Bloquear cartão de ${data.nome}`, 'Listar clientes']);
+        btn.disabled = false; return;
+      }
+    }
+
+    addMsg('Não entendi o comando. Use os atalhos do menu ou digite "ajuda" para ver os comandos disponíveis.', 'bot');
+    addSugestoes(['consultar fatura', 'listar clientes', 'ajuda']);
+    btn.disabled = false;
+  }
+
+  function enviar() {
+    const inp = document.getElementById('msg-input');
+    const val = inp.value.trim();
+    if (!val) return;
+    addMsg(val, 'user');
+    inp.value = '';
+    setTimeout(() => processar(val), 100);
+  }
+
+  function sendCmd(cmd) {
+    addMsg(cmd, 'user');
+    setTimeout(() => processar(cmd), 100);
+  }
+
+  // ── Mensagem inicial ───────────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      addMsg('Olá! Sou o assistente do Banco Digital. Posso consultar faturas, realizar compras, bloquear cartões, gerar relatórios e muito mais. Como posso ajudar?', 'bot');
+      addSugestoes(['Consultar fatura', 'Listar clientes', 'Relatório geral', 'Ajuda']);
+    }, 300);
+  });
+</script>
+</body>
+</html>
