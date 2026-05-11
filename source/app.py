@@ -133,8 +133,10 @@ def login():
 
     return jsonify(cliente)
 
-@app.route("/minha-conta", methods=["GET"])
-def consultar_cliente(cpf):
+@app.route("/minha-conta", methods=["POST"])
+def consultar_cliente():
+    data = request.get_json()
+    cpf = data.get("cpf", "")
     conn = conectar()
     c = conn.cursor()
     cpf_limpo = cpf.replace('.','').replace('-','').replace(' ','')
@@ -156,6 +158,65 @@ def consultar_cliente(cpf):
     conn.close()
     return jsonify(cliente)
 
+@app.route("/minha-fatura", methods=["POST"])
+def minha_fatura():
+    data = request.get_json()
+    cpf = data.get("cpf", "")
+
+    conn = conectar()
+    c = conn.cursor()
+
+    cpf_limpo = cpf.replace('.', '').replace('-', '').replace(' ', '')
+
+    c.execute("""
+        SELECT cpf, nome, numero_cartao, limite_total,
+               limite_disponivel, fatura_atual,
+               vencimento_cartao, vencimento_fatura,
+               status_cartao
+        FROM clientes
+        WHERE REPLACE(REPLACE(cpf,'.',''),'-','') = ?
+    """, (cpf_limpo,))
+
+    row = c.fetchone()
+
+    if not row:
+        conn.close()
+        return jsonify({"erro": "Cliente não encontrado"}), 404
+
+    campos = [
+        "cpf",
+        "nome",
+        "numero_cartao",
+        "limite_total",
+        "limite_disponivel",
+        "fatura_atual",
+        "vencimento_cartao",
+        "vencimento_fatura",
+        "status_cartao"
+    ]
+
+    cliente = dict(zip(campos, row))
+
+    c.execute("""
+        SELECT descricao, valor, data
+        FROM transacoes
+        WHERE cpf_cliente = ?
+        ORDER BY id DESC
+        LIMIT 10
+    """, (cliente["cpf"],))
+
+    cliente["transacoes"] = [
+        {
+            "descricao": t[0],
+            "valor": t[1],
+            "data": t[2]
+        }
+        for t in c.fetchall()
+    ]
+
+    conn.close()
+
+    return jsonify(cliente)
 
 @app.route("/cadastrar", methods=["POST"])
 def adicionar_cliente():
