@@ -381,7 +381,7 @@ def deletar_cliente():
 
 # ── Rotas existentes (sem alteração) ───────────────────────────────────────
 
-@app.route("/bloquear", methods=["POST"])
+@app.route("/bloquear-meu-cartao", methods=["POST"])
 def bloquear_cartao():
     data = request.get_json()
     busca = data.get("cpf", "")
@@ -401,7 +401,7 @@ def bloquear_cartao():
     return jsonify({"status": "ok", "mensagem": "Cartão bloqueado com sucesso"})
 
 
-@app.route("/desbloquear", methods=["POST"])
+@app.route("/desbloquear-meu-cartao", methods=["POST"])
 def desbloquear_cartao():
     data = request.get_json()
     busca = data.get("cpf", "")
