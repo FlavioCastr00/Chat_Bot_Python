@@ -280,7 +280,8 @@ async function processar(msg) {
     if (estado.aguardando === 'upd_nome') {
         addLoading();
         const data = await api('/atualizar-meus-dados', 'PUT', {
-            cpf: sessao.cpf, novo_nome: msg.trim()
+            busca: sessao.cpf,
+            nome: msg.trim()
         });
         removeLoading();
         estado.aguardando = null;
@@ -295,7 +296,8 @@ async function processar(msg) {
     if (estado.aguardando === 'upd_cpf') {
         addLoading();
         const data = await api('/atualizar-meus-dados', 'PUT', {
-            cpf: sessao.cpf, novo_cpf: msg.trim()
+            busca: sessao.cpf,
+            cpf: msg.trim()
         });
         removeLoading();
         estado.aguardando = null;
@@ -339,6 +341,20 @@ async function processar(msg) {
         btn.disabled = false; return;
     }
 
+    if (m.includes('atualizar') || m.includes('corrigir') || m.includes('alterar meu')) {
+        if (exigeLogin()) { btn.disabled = false; return; }
+        addMsg('O que deseja atualizar? Digite "nome" ou "cpf":', 'bot');
+        estado.aguardando = 'upd_campo';
+        btn.disabled = false; return;
+    }
+
+    if (m.includes('encerrar') || m.includes('deletar conta') || m.includes('excluir conta')) {
+        if (exigeLogin()) { btn.disabled = false; return; }
+        addMsg('⚠️ Tem certeza que deseja encerrar sua conta? Todos os seus dados serão removidos permanentemente. Digite "sim" para confirmar ou qualquer outra coisa para cancelar.', 'bot');
+        estado.aguardando = 'confirmar_encerramento';
+        btn.disabled = false; return;
+    }
+
     if (m.includes('minha conta') || m.includes('ver minha conta') || m.includes('meus dados')) {
         if (exigeLogin()) { btn.disabled = false; return; }
         addLoading();
@@ -361,46 +377,66 @@ async function processar(msg) {
         btn.disabled = false; return;
     }
 
-    if (m.includes('bloquear')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-        addLoading();
-        const data = await api('/bloquear-meu-cartao', 'POST', { cpf: sessao.cpf });
-        removeLoading();
-        if (data.erro) { addMsg('Aviso: ' + data.erro, 'bot'); btn.disabled = false; return; }
-        addMsg(`🔒 ${data.mensagem}`, 'bot');
-        addSugestoes(['Desbloquear meu cartão', 'Ver minha conta']);
-        btn.disabled = false; return;
-    }
-
     if (m.includes('desbloquear')) {
         if (exigeLogin()) { btn.disabled = false; return; }
+
         addLoading();
-        const data = await api('/desbloquear-meu-cartao', 'POST', { cpf: sessao.cpf });
+
+        const data = await api('/desbloquear-meu-cartao', 'POST', {
+            cpf: sessao.cpf
+        });
+
         removeLoading();
-        if (data.erro) { addMsg('Aviso: ' + data.erro, 'bot'); btn.disabled = false; return; }
+
+        if (data.erro) {
+            addMsg('Aviso: ' + data.erro, 'bot');
+            btn.disabled = false;
+            return;
+        }
+
         addMsg(`🔓 ${data.mensagem}`, 'bot');
-        addSugestoes(['Fazer uma compra', 'Ver minha conta']);
-        btn.disabled = false; return;
+
+        addSugestoes([
+            'Fazer uma compra',
+            'Ver minha conta'
+        ]);
+
+        btn.disabled = false;
+        return;
+    }
+
+    if (m.includes('bloquear')) {
+        if (exigeLogin()) { btn.disabled = false; return; }
+
+        addLoading();
+
+        const data = await api('/bloquear-meu-cartao', 'POST', {
+            cpf: sessao.cpf
+        });
+
+        removeLoading();
+
+        if (data.erro) {
+            addMsg('Aviso: ' + data.erro, 'bot');
+            btn.disabled = false;
+            return;
+        }
+
+        addMsg(`🔒 ${data.mensagem}`, 'bot');
+
+        addSugestoes([
+            'Desbloquear meu cartão',
+            'Ver minha conta'
+        ]);
+
+        btn.disabled = false;
+        return;
     }
 
     if (m.includes('compra') || m.includes('simular') || m.includes('fazer uma compra')) {
         if (exigeLogin()) { btn.disabled = false; return; }
         addMsg('Qual é a descrição da compra? (ex: Supermercado, Netflix...)', 'bot');
         estado.aguardando = 'compra_desc'; estado.dados = {};
-        btn.disabled = false; return;
-    }
-
-    if (m.includes('atualizar') || m.includes('corrigir') || m.includes('alterar meu')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-        addMsg('O que deseja atualizar? Digite "nome" ou "cpf":', 'bot');
-        estado.aguardando = 'upd_campo';
-        btn.disabled = false; return;
-    }
-
-    if (m.includes('encerrar') || m.includes('deletar conta') || m.includes('excluir conta')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-        addMsg('⚠️ Tem certeza que deseja encerrar sua conta? Todos os seus dados serão removidos permanentemente. Digite "sim" para confirmar ou qualquer outra coisa para cancelar.', 'bot');
-        estado.aguardando = 'confirmar_encerramento';
         btn.disabled = false; return;
     }
 

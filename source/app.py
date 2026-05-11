@@ -246,7 +246,7 @@ def adicionar_cliente():
 
 # ── UPDATE de cliente ───────────────────────────────────────────────────────
 
-@app.route("/atualizar", methods=["PUT"])
+@app.route("/atualizar-meus-dados", methods=["PUT"])
 def atualizar_cliente():
     """
     Atualiza dados de um cliente existente.
@@ -338,7 +338,7 @@ def atualizar_cliente():
 
 # ── DELETE de cliente ───────────────────────────────────────────────────────
 
-@app.route("/deletar", methods=["DELETE"])
+@app.route("/encerrar-conta", methods=["DELETE"])
 def deletar_cliente():
     """
     Remove um cliente e todas as suas transações.
