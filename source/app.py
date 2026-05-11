@@ -88,6 +88,50 @@ def listar_clientes():
     campos = ["cpf","nome","numero_cartao","limite_total","limite_disponivel","fatura_atual","vencimento_cartao","vencimento_fatura","status_cartao"]
     return jsonify([dict(zip(campos, r)) for r in rows])
 
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    cpf = data.get("cpf", "")
+
+    conn = conectar()
+    c = conn.cursor()
+
+    cpf_limpo = cpf.replace('.', '').replace('-', '').replace(' ', '')
+
+    c.execute("""
+        SELECT cpf, nome, numero_cartao, limite_total,
+               limite_disponivel, fatura_atual,
+               vencimento_cartao, vencimento_fatura,
+               status_cartao
+        FROM clientes
+        WHERE REPLACE(REPLACE(cpf,'.',''),'-','') = ?
+    """, (cpf_limpo,))
+
+    row = c.fetchone()
+
+    conn.close()
+
+    if not row:
+        return jsonify({
+            "erro": "CPF não encontrado",
+            "cadastrar": True
+        }), 404
+
+    campos = [
+        "cpf",
+        "nome",
+        "numero_cartao",
+        "limite_total",
+        "limite_disponivel",
+        "fatura_atual",
+        "vencimento_cartao",
+        "vencimento_fatura",
+        "status_cartao"
+    ]
+
+    cliente = dict(zip(campos, row))
+
+    return jsonify(cliente)
 
 @app.route("/minha-conta", methods=["GET"])
 def consultar_cliente(cpf):
