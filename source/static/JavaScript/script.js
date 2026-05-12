@@ -109,6 +109,23 @@ function cardConta(c) {
     `;
 }
 
+function cardCartao(c) {
+    const usado = c.limite_total - c.limite_disponivel;
+    const p = pct(usado, c.limite_total);
+    return `
+      <strong>Informações do cartão</strong>
+      <div class="result-card" style="margin-top:8px">
+        <div class="card-row"><span class="lbl">Titular</span><span class="val">${c.nome}</span></div>
+        <div class="card-row"><span class="lbl">Cartão</span><span class="val">${c.numero_cartao}</span></div>
+        <div class="card-row"><span class="lbl">Status</span><span class="val"><span class="badge ${c.status_cartao}">${c.status_cartao}</span></span></div>
+        <div class="card-row"><span class="lbl">Vencimento do cartão</span><span class="val">${c.vencimento_cartao}</span></div>
+        <div class="card-row"><span class="lbl">Limite total</span><span class="val">${fmt(c.limite_total)}</span></div>
+        <div class="card-row"><span class="lbl">Limite disponível</span><span class="val" style="color:#0c447c">${fmt(c.limite_disponivel)}</span></div>
+        <div class="card-row"><span class="lbl">Uso do limite</span><span class="val">${p}%</span></div>
+      </div>
+    `;
+}
+
 function cardFatura(c) {
     const transList = (c.transacoes && c.transacoes.length > 0)
         ? c.transacoes.map(t =>
@@ -131,12 +148,41 @@ function cardFatura(c) {
     `;
 }
 
+function ajudaHTML() {
+    return `
+        <strong>O que posso fazer por você</strong>
+        <div class="result-card" style="margin-top:8px">
+          <div class="card-row"><span class="lbl">entrar com CPF</span><span class="val" style="color:#185fa5">Identificação</span></div>
+          <div class="card-row"><span class="lbl">criar conta</span><span class="val" style="color:#185fa5">Auto-cadastro</span></div>
+          <div class="card-row"><span class="lbl">minha conta</span><span class="val" style="color:#185fa5">Dados e limite</span></div>
+          <div class="card-row"><span class="lbl">cartão</span><span class="val" style="color:#185fa5">Status e limite</span></div>
+          <div class="card-row"><span class="lbl">minha fatura</span><span class="val" style="color:#185fa5">Fatura e lançamentos</span></div>
+          <div class="card-row"><span class="lbl">fazer uma compra</span><span class="val" style="color:#185fa5">Simular compra</span></div>
+          <div class="card-row"><span class="lbl">bloquear cartão</span><span class="val" style="color:#a32d2d">Bloquear</span></div>
+          <div class="card-row"><span class="lbl">desbloquear cartão</span><span class="val" style="color:#27500a">Desbloquear</span></div>
+          <div class="card-row"><span class="lbl">atualizar meus dados</span><span class="val" style="color:#185fa5">Corrigir nome/CPF</span></div>
+          <div class="card-row"><span class="lbl">encerrar minha conta</span><span class="val" style="color:#a32d2d">Excluir conta</span></div>
+        </div>
+      `;
+}
+
 // ── API ───────────────────────────────────────────────────────
 async function api(rota, metodo = 'GET', body = null) {
     const opts = { method: metodo, headers: { 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(rota, opts);
     return res.json();
+}
+
+async function classificarMensagem(msg) {
+    const data = await api('/chat', 'POST', {
+        message: msg,
+        cpf: sessao.cpf
+    });
+
+    // Ajuda no aprendizado: abra o console do navegador para ver o ML funcionando.
+    console.log('[ML] intenção:', data.intent, '| confiança:', data.confidence, '| resposta:', data.response);
+    return data;
 }
 
 // ── Guard: exige login ────────────────────────────────────────
@@ -150,6 +196,131 @@ function exigeLogin() {
 }
 
 // ════════════════════════════════════════════════════════════
+//  EXECUÇÃO DAS INTENÇÕES PREVISTAS PELO MODELO
+// ════════════════════════════════════════════════════════════
+async function executarIntencao(intent, msg, mlData) {
+    if (intent === 'saudacao') {
+        addMsg(mlData.response || 'Olá! Como posso ajudar?', 'bot');
+        addSugestoes(sessao.logado ? ['Minha fatura', 'Cartão', 'Ver minha conta'] : ['Entrar com CPF', 'Criar conta', 'Ajuda']);
+        return;
+    }
+
+    if (intent === 'despedida') {
+        addMsg(mlData.response || 'Até mais!', 'bot');
+        return;
+    }
+
+    if (intent === 'login') {
+        if (sessao.logado) {
+            addMsg(`Você já está logado como ${sessao.nome}.`, 'bot');
+            addSugestoes(['Ver minha conta', 'Minha fatura', 'Sair']);
+            return;
+        }
+        addMsg('Informe seu CPF para entrar:', 'bot');
+        estado.aguardando = 'login_cpf';
+        return;
+    }
+
+    if (intent === 'criar_conta') {
+        addMsg('Vamos criar sua conta! Qual é o seu nome completo?', 'bot');
+        estado.aguardando = 'cad_nome';
+        estado.dados = {};
+        return;
+    }
+
+    if (intent === 'atualizar_dados') {
+        if (exigeLogin()) return;
+        addMsg('O que deseja atualizar? Digite "nome" ou "cpf":', 'bot');
+        estado.aguardando = 'upd_campo';
+        return;
+    }
+
+    if (intent === 'encerrar_conta') {
+        if (exigeLogin()) return;
+        addMsg('⚠️ Tem certeza que deseja encerrar sua conta? Todos os seus dados serão removidos permanentemente. Digite "sim" para confirmar ou qualquer outra coisa para cancelar.', 'bot');
+        estado.aguardando = 'confirmar_encerramento';
+        return;
+    }
+
+    if (intent === 'visualizar_conta') {
+        if (exigeLogin()) return;
+        addLoading();
+        const data = await api('/minha-conta', 'POST', { cpf: sessao.cpf });
+        removeLoading();
+        if (data.erro) { addMsg('Erro: ' + data.erro, 'bot'); return; }
+        addMsg(cardConta(data), 'bot', true);
+        addSugestoes(['Minha fatura', 'Cartão', 'Fazer uma compra', 'Atualizar meus dados']);
+        return;
+    }
+
+    if (intent === 'cartao') {
+        if (exigeLogin()) return;
+        addLoading();
+        const data = await api('/meu-cartao', 'POST', { cpf: sessao.cpf });
+        removeLoading();
+        if (data.erro) { addMsg('Erro: ' + data.erro, 'bot'); return; }
+        addMsg(cardCartao(data), 'bot', true);
+        addSugestoes(data.status_cartao === 'bloqueado' ? ['Desbloquear meu cartão', 'Minha fatura'] : ['Bloquear meu cartão', 'Minha fatura', 'Fazer uma compra']);
+        return;
+    }
+
+    if (intent === 'minha_fatura') {
+        if (exigeLogin()) return;
+        addLoading();
+        const data = await api('/minha-fatura', 'POST', { cpf: sessao.cpf });
+        removeLoading();
+        if (data.erro) { addMsg('Erro: ' + data.erro, 'bot'); return; }
+        addMsg(cardFatura(data), 'bot', true);
+        addSugestoes(['Fazer uma compra', 'Cartão', 'Ver minha conta']);
+        return;
+    }
+
+    if (intent === 'desbloquear_cartao') {
+        if (exigeLogin()) return;
+        addLoading();
+        const data = await api('/desbloquear-meu-cartao', 'POST', { cpf: sessao.cpf });
+        removeLoading();
+        if (data.erro) { addMsg('Aviso: ' + data.erro, 'bot'); return; }
+        addMsg(`🔓 ${data.mensagem}`, 'bot');
+        addSugestoes(['Cartão', 'Fazer uma compra', 'Ver minha conta']);
+        return;
+    }
+
+    if (intent === 'bloquear_cartao') {
+        if (exigeLogin()) return;
+        addLoading();
+        const data = await api('/bloquear-meu-cartao', 'POST', { cpf: sessao.cpf });
+        removeLoading();
+        if (data.erro) { addMsg('Aviso: ' + data.erro, 'bot'); return; }
+        addMsg(`🔒 ${data.mensagem}`, 'bot');
+        addSugestoes(['Cartão', 'Desbloquear meu cartão', 'Ver minha conta']);
+        return;
+    }
+
+    if (intent === 'fazer_compra') {
+        if (exigeLogin()) return;
+        addMsg('Qual é a descrição da compra? (ex: Supermercado, Netflix...)', 'bot');
+        estado.aguardando = 'compra_desc';
+        estado.dados = {};
+        return;
+    }
+
+    if (intent === 'sair') {
+        sair();
+        return;
+    }
+
+    if (intent === 'ajuda') {
+        addMsg(ajudaHTML(), 'bot', true);
+        return;
+    }
+
+    // Fallback
+    addMsg('Não entendi. Digite "ajuda" para ver o que posso fazer por você.', 'bot');
+    addSugestoes(['Ajuda', sessao.logado ? 'Ver minha conta' : 'Entrar com CPF']);
+}
+
+// ════════════════════════════════════════════════════════════
 //  PROCESSAMENTO PRINCIPAL
 // ════════════════════════════════════════════════════════════
 async function processar(msg) {
@@ -158,6 +329,8 @@ async function processar(msg) {
     btn.disabled = true;
 
     // ── Fluxos aguardando resposta ────────────────────────────
+    // Estes trechos continuam manuais porque são respostas de formulário
+    // como CPF, nome, dia de vencimento e valor da compra.
 
     // LOGIN
     if (estado.aguardando === 'login_cpf') {
@@ -177,7 +350,7 @@ async function processar(msg) {
         }
         ativarSessao(data.cpf, data.nome);
         addMsg(cardConta(data), 'bot', true);
-        addSugestoes(['Minha fatura', 'Fazer uma compra', 'Bloquear meu cartão']);
+        addSugestoes(['Minha fatura', 'Cartão', 'Fazer uma compra', 'Bloquear meu cartão']);
         btn.disabled = false; return;
     }
 
@@ -223,7 +396,7 @@ async function processar(msg) {
           <div class="card-row"><span class="lbl">Status</span><span class="val"><span class="badge ativo">ativo</span></span></div>
         </div>
       `, 'bot', true);
-        addSugestoes(['Minha fatura', 'Fazer uma compra']);
+        addSugestoes(['Minha fatura', 'Cartão', 'Fazer uma compra']);
         btn.disabled = false; return;
     }
 
@@ -259,7 +432,7 @@ async function processar(msg) {
           <div class="card-row"><span class="lbl">Nova fatura</span><span class="val">${fmt(data.fatura_atual)}</span></div>
         </div>
       `, 'bot', true);
-        addSugestoes(['Minha fatura', 'Fazer outra compra', 'Ver minha conta']);
+        addSugestoes(['Minha fatura', 'Fazer outra compra', 'Cartão', 'Ver minha conta']);
         btn.disabled = false; return;
     }
 
@@ -326,145 +499,21 @@ async function processar(msg) {
         btn.disabled = false; return;
     }
 
-    // ── Comandos diretos ─────────────────────────────────────
-
-    if (m.includes('entrar') || m.includes('login') || m.includes('meu cpf') || m.includes('entrar com cpf') || m === 'cpf') {
-        if (sessao.logado) { addMsg(`Você já está logado como ${sessao.nome}.`, 'bot'); addSugestoes(['Ver minha conta', 'Sair']); btn.disabled = false; return; }
-        addMsg('Informe seu CPF para entrar:', 'bot');
-        estado.aguardando = 'login_cpf';
-        btn.disabled = false; return;
-    }
-
-    if (m.includes('cadastrar') || m.includes('criar conta') || m.includes('sim, quero me cadastrar') || m.includes('nova conta')) {
-        addMsg('Vamos criar sua conta! Qual é o seu nome completo?', 'bot');
-        estado.aguardando = 'cad_nome'; estado.dados = {};
-        btn.disabled = false; return;
-    }
-
-    if (m.includes('atualizar') || m.includes('corrigir') || m.includes('alterar meu')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-        addMsg('O que deseja atualizar? Digite "nome" ou "cpf":', 'bot');
-        estado.aguardando = 'upd_campo';
-        btn.disabled = false; return;
-    }
-
-    if (m.includes('encerrar') || m.includes('deletar conta') || m.includes('excluir conta')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-        addMsg('⚠️ Tem certeza que deseja encerrar sua conta? Todos os seus dados serão removidos permanentemente. Digite "sim" para confirmar ou qualquer outra coisa para cancelar.', 'bot');
-        estado.aguardando = 'confirmar_encerramento';
-        btn.disabled = false; return;
-    }
-
-    if (m.includes('minha conta') || m.includes('ver minha conta') || m.includes('meus dados')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
+    // ── Machine Learning ───────────────────────────────────────
+    // A partir daqui, o chatbot não usa mais uma lista grande de if/else com includes.
+    // Ele envia a frase para /chat, o Flask usa CountVectorizer + LogisticRegression,
+    // e a intenção prevista decide qual funcionalidade executar.
+    try {
         addLoading();
-        const data = await api('/minha-conta', 'POST', { cpf: sessao.cpf });
+        const mlData = await classificarMensagem(msg);
         removeLoading();
-        if (data.erro) { addMsg('Erro: ' + data.erro, 'bot'); btn.disabled = false; return; }
-        addMsg(cardConta(data), 'bot', true);
-        addSugestoes(['Minha fatura', 'Fazer uma compra', 'Atualizar meus dados']);
-        btn.disabled = false; return;
-    }
-
-    if (m.includes('fatura') || m.includes('lançamento') || m.includes('lancamento')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-        addLoading();
-        const data = await api('/minha-fatura', 'POST', { cpf: sessao.cpf });
+        await executarIntencao(mlData.intent, msg, mlData);
+    } catch (error) {
         removeLoading();
-        if (data.erro) { addMsg('Erro: ' + data.erro, 'bot'); btn.disabled = false; return; }
-        addMsg(cardFatura(data), 'bot', true);
-        addSugestoes(['Fazer uma compra', 'Bloquear meu cartão', 'Ver minha conta']);
-        btn.disabled = false; return;
+        console.error(error);
+        addMsg('Erro ao consultar o modelo de Machine Learning.', 'bot');
     }
 
-    if (m.includes('desbloquear')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-
-        addLoading();
-
-        const data = await api('/desbloquear-meu-cartao', 'POST', {
-            cpf: sessao.cpf
-        });
-
-        removeLoading();
-
-        if (data.erro) {
-            addMsg('Aviso: ' + data.erro, 'bot');
-            btn.disabled = false;
-            return;
-        }
-
-        addMsg(`🔓 ${data.mensagem}`, 'bot');
-
-        addSugestoes([
-            'Fazer uma compra',
-            'Ver minha conta'
-        ]);
-
-        btn.disabled = false;
-        return;
-    }
-
-    if (m.includes('bloquear')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-
-        addLoading();
-
-        const data = await api('/bloquear-meu-cartao', 'POST', {
-            cpf: sessao.cpf
-        });
-
-        removeLoading();
-
-        if (data.erro) {
-            addMsg('Aviso: ' + data.erro, 'bot');
-            btn.disabled = false;
-            return;
-        }
-
-        addMsg(`🔒 ${data.mensagem}`, 'bot');
-
-        addSugestoes([
-            'Desbloquear meu cartão',
-            'Ver minha conta'
-        ]);
-
-        btn.disabled = false;
-        return;
-    }
-
-    if (m.includes('compra') || m.includes('simular') || m.includes('fazer uma compra')) {
-        if (exigeLogin()) { btn.disabled = false; return; }
-        addMsg('Qual é a descrição da compra? (ex: Supermercado, Netflix...)', 'bot');
-        estado.aguardando = 'compra_desc'; estado.dados = {};
-        btn.disabled = false; return;
-    }
-
-    if (m === 'sair' || m.includes('sair da conta') || m.includes('logout')) {
-        sair(); btn.disabled = false; return;
-    }
-
-    if (m.includes('ajuda') || m.includes('help') || m.includes('comandos') || m.includes('o que você faz')) {
-        addMsg(`
-        <strong>O que posso fazer por você</strong>
-        <div class="result-card" style="margin-top:8px">
-          <div class="card-row"><span class="lbl">entrar com CPF</span><span class="val" style="color:#185fa5">Identificação</span></div>
-          <div class="card-row"><span class="lbl">criar conta</span><span class="val" style="color:#185fa5">Auto-cadastro</span></div>
-          <div class="card-row"><span class="lbl">minha conta</span><span class="val" style="color:#185fa5">Dados e limite</span></div>
-          <div class="card-row"><span class="lbl">minha fatura</span><span class="val" style="color:#185fa5">Fatura e lançamentos</span></div>
-          <div class="card-row"><span class="lbl">fazer uma compra</span><span class="val" style="color:#185fa5">Simular compra</span></div>
-          <div class="card-row"><span class="lbl">bloquear cartão</span><span class="val" style="color:#a32d2d">Bloquear</span></div>
-          <div class="card-row"><span class="lbl">desbloquear cartão</span><span class="val" style="color:#27500a">Desbloquear</span></div>
-          <div class="card-row"><span class="lbl">atualizar meus dados</span><span class="val" style="color:#185fa5">Corrigir nome/CPF</span></div>
-          <div class="card-row"><span class="lbl">encerrar minha conta</span><span class="val" style="color:#a32d2d">Excluir conta</span></div>
-        </div>
-      `, 'bot', true);
-        btn.disabled = false; return;
-    }
-
-    // Fallback
-    addMsg('Não entendi. Digite "ajuda" para ver o que posso fazer por você.', 'bot');
-    addSugestoes(['Ajuda', sessao.logado ? 'Ver minha conta' : 'Entrar com CPF']);
     btn.disabled = false;
 }
 
@@ -485,7 +534,7 @@ function sendCmd(cmd) {
 // ── Mensagem inicial ──────────────────────────────────────────
 window.addEventListener('load', () => {
     setTimeout(() => {
-        addMsg('Olá! 👋 Bem-vindo(a) ao Banco Digital. Para começar, informe seu CPF ou crie uma conta.', 'bot');
+        addMsg('Olá! 👋 Bem-vindo(a) ao Banco Digital. Agora o chatbot usa Machine Learning para entender suas mensagens. Para começar, informe seu CPF ou crie uma conta.', 'bot');
         addSugestoes(['Entrar com CPF', 'Criar conta', 'Ajuda']);
     }, 300);
 });

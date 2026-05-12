@@ -1,0 +1,338 @@
+{
+  "intents": [
+    {
+      "tag": "saudacao",
+      "patterns": [
+        "oi",
+        "olá",
+        "ola",
+        "bom dia",
+        "boa tarde",
+        "boa noite",
+        "e aí",
+        "e ai",
+        "tudo bem",
+        "iniciar",
+        "começar atendimento",
+        "preciso de atendimento",
+        "quero atendimento",
+        "hello",
+        "hey"
+      ],
+      "responses": [
+        "Olá! Posso ajudar com sua conta, fatura, cartão, cadastro, compras e comandos.",
+        "Oi! Para começar, você pode entrar com CPF, criar conta ou digitar ajuda."
+      ]
+    },
+    {
+      "tag": "login",
+      "patterns": [
+        "entrar",
+        "login",
+        "entrar com cpf",
+        "acessar conta",
+        "acessar minha conta",
+        "meu cpf",
+        "quero entrar",
+        "identificar cliente",
+        "fazer login",
+        "sou cliente",
+        "já tenho conta",
+        "ja tenho conta"
+      ],
+      "responses": [
+        "Informe seu CPF para entrar."
+      ]
+    },
+    {
+      "tag": "criar_conta",
+      "patterns": [
+        "criar conta",
+        "abrir conta",
+        "nova conta",
+        "quero criar conta",
+        "quero abrir uma conta",
+        "cadastrar",
+        "me cadastrar",
+        "cadastro",
+        "sim quero me cadastrar",
+        "sim, quero me cadastrar",
+        "fazer cadastro",
+        "abrir minha conta",
+        "não tenho conta",
+        "nao tenho conta"
+      ],
+      "responses": [
+        "Vamos criar sua conta. Primeiro, informe seu nome completo."
+      ]
+    },
+    {
+      "tag": "visualizar_conta",
+      "patterns": [
+        "visualizar minha conta",
+        "ver minha conta",
+        "minha conta",
+        "consultar conta",
+        "dados da conta",
+        "saldo",
+        "limite disponível",
+        "limite disponivel",
+        "ver limite",
+        "meus limites",
+        "consultar limite",
+        "informações da conta",
+        "informacoes da conta",
+        "extrato da conta",
+        "ver meus dados da conta",
+        "me mostra meu limite",
+        "mostrar limite",
+        "qual meu limite",
+        "qual é meu limite",
+        "qual e meu limite",
+        "limite total",
+        "limite disponivel",
+        "limite disponível",
+        "meu saldo",
+        "consultar saldo"
+      ],
+      "responses": [
+        "Vou consultar os dados da sua conta."
+      ]
+    },
+    {
+      "tag": "minha_fatura",
+      "patterns": [
+        "minha fatura",
+        "ver fatura",
+        "consultar fatura",
+        "segunda via da fatura",
+        "boleto da fatura",
+        "valor da fatura",
+        "vencimento da fatura",
+        "quanto devo",
+        "lançamentos",
+        "lancamentos",
+        "compras da fatura",
+        "histórico da fatura",
+        "historico da fatura",
+        "fatura do cartão",
+        "fatura do cartao"
+      ],
+      "responses": [
+        "Vou consultar sua fatura e os últimos lançamentos."
+      ]
+    },
+    {
+      "tag": "cartao",
+      "patterns": [
+        "cartão",
+        "cartao",
+        "meu cartão",
+        "meu cartao",
+        "dados do cartão",
+        "dados do cartao",
+        "status do cartão",
+        "status do cartao",
+        "ver cartão",
+        "ver cartao",
+        "informações do cartão",
+        "informacoes do cartao",
+        "limite do cartão",
+        "limite do cartao",
+        "serviços do cartão",
+        "servicos do cartao",
+        "cartão",
+        "cartão",
+        "cartão",
+        "cartao",
+        "cartao",
+        "cartao",
+        "meu cartão",
+        "meu cartao",
+        "ver meu cartão",
+        "ver meu cartao",
+        "consultar cartão",
+        "consultar cartao",
+        "mostrar cartão",
+        "mostrar cartao",
+        "status",
+        "status cartão",
+        "status cartao"
+      ],
+      "responses": [
+        "Vou consultar as informações do seu cartão."
+      ]
+    },
+    {
+      "tag": "bloquear_cartao",
+      "patterns": [
+        "bloquear cartão",
+        "bloquear cartao",
+        "bloquear meu cartão",
+        "bloquear meu cartao",
+        "perdi meu cartão",
+        "perdi meu cartao",
+        "cartão roubado",
+        "cartao roubado",
+        "cartão perdido",
+        "cartao perdido",
+        "roubaram meu cartão",
+        "roubaram meu cartao",
+        "cancelar cartão",
+        "cancelar cartao",
+        "suspender cartão",
+        "suspender cartao"
+      ],
+      "responses": [
+        "Vou bloquear o cartão vinculado à sua conta."
+      ]
+    },
+    {
+      "tag": "desbloquear_cartao",
+      "patterns": [
+        "desbloquear cartão",
+        "desbloquear cartao",
+        "desbloquear meu cartão",
+        "desbloquear meu cartao",
+        "liberar cartão",
+        "liberar cartao",
+        "reativar cartão",
+        "reativar cartao",
+        "meu cartão está bloqueado",
+        "meu cartao esta bloqueado",
+        "tirar bloqueio do cartão",
+        "tirar bloqueio do cartao"
+      ],
+      "responses": [
+        "Vou desbloquear o cartão vinculado à sua conta."
+      ]
+    },
+    {
+      "tag": "fazer_compra",
+      "patterns": [
+        "fazer uma compra",
+        "simular compra",
+        "comprar",
+        "nova compra",
+        "lançar compra",
+        "lancar compra",
+        "registrar compra",
+        "testar compra",
+        "passar compra",
+        "fazer outra compra",
+        "simule uma compra"
+      ],
+      "responses": [
+        "Vamos simular uma compra. Primeiro, informe a descrição."
+      ]
+    },
+    {
+      "tag": "atualizar_dados",
+      "patterns": [
+        "atualizar dados",
+        "atualizar meus dados",
+        "alterar meus dados",
+        "corrigir dados",
+        "mudar nome",
+        "trocar nome",
+        "mudar cpf",
+        "trocar cpf",
+        "corrigir cadastro",
+        "alterar cadastro",
+        "editar dados",
+        "editar meu cadastro",
+        "meus dados"
+      ],
+      "responses": [
+        "Vou iniciar a atualização dos seus dados cadastrais."
+      ]
+    },
+    {
+      "tag": "encerrar_conta",
+      "patterns": [
+        "encerrar conta",
+        "encerrar minha conta",
+        "fechar conta",
+        "deletar conta",
+        "excluir conta",
+        "cancelar conta",
+        "remover conta",
+        "apagar conta",
+        "quero fechar minha conta",
+        "quero encerrar minha conta"
+      ],
+      "responses": [
+        "Vou iniciar a confirmação de encerramento da conta."
+      ]
+    },
+    {
+      "tag": "ajuda",
+      "patterns": [
+        "ajuda",
+        "help",
+        "ver comandos",
+        "comandos",
+        "lista de comandos",
+        "o que você faz",
+        "o que voce faz",
+        "opções",
+        "opcoes",
+        "menu",
+        "mostrar menu",
+        "não entendi",
+        "nao entendi"
+      ],
+      "responses": [
+        "Posso ajudar com login, criar conta, conta, fatura, cartão, compra, atualização de dados e encerramento."
+      ]
+    },
+    {
+      "tag": "sair",
+      "patterns": [
+        "sair",
+        "sair da conta",
+        "logout",
+        "deslogar",
+        "encerrar sessão",
+        "encerrar sessao",
+        "trocar usuário",
+        "trocar usuario"
+      ],
+      "responses": [
+        "Você saiu da conta."
+      ]
+    },
+    {
+      "tag": "despedida",
+      "patterns": [
+        "tchau",
+        "até mais",
+        "ate mais",
+        "obrigado",
+        "obrigada",
+        "valeu",
+        "até logo",
+        "ate logo",
+        "finalizar atendimento"
+      ],
+      "responses": [
+        "Até mais! Sempre que precisar, estou por aqui."
+      ]
+    },
+    {
+      "tag": "fallback",
+      "patterns": [
+        "xyz",
+        "asdf",
+        "pergunta sem sentido",
+        "banana",
+        "coisa aleatória",
+        "nao sei",
+        "não sei"
+      ],
+      "responses": [
+        "Não entendi sua solicitação. Digite ajuda ou use os botões do menu."
+      ]
+    }
+  ]
+}

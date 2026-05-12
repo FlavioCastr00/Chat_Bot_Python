@@ -4,7 +4,7 @@
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='css/icon.png') }}?v=1">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Banco Digital — Chatbot</title>
+  <title>Banco Digital — Chatbot com ML</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1">
 </head>
 <body>
@@ -27,6 +27,9 @@
       </button>
 
       <p class="section-label" style="margin-top:16px">Cartão</p>
+      <button class="cmd-btn locked" onclick="sendCmd('cartão')" disabled>
+        <span class="cmd-icon">💳</span> Ver cartão
+      </button>
       <button class="cmd-btn locked" onclick="sendCmd('bloquear meu cartão')"   disabled>
         <span class="cmd-icon">🔒</span> Bloquear cartão
       </button>
@@ -62,8 +65,8 @@
   <div id="main">
     <div id="topbar">
       <div class="status-dot"></div>
-      <h3>Assistente Bancário</h3>
-      <span>online</span>
+      <h3>Assistente Bancário com ML</h3>
+      <span>CountVectorizer + LogisticRegression</span>
     </div>
 
     <div id="chat-area"></div>

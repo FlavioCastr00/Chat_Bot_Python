@@ -1,0 +1,242 @@
+{
+  "intencoes": [
+    {
+      "tag": "login",
+      "rota": "/login",
+      "respostas": [
+        "Claro! Informe seu CPF para entrar.",
+        "Digite seu CPF para acessar sua conta.",
+        "Estou pronto para fazer seu login."
+      ],
+      "padroes": [
+        "quero entrar",
+        "fazer login",
+        "acessar minha conta",
+        "entrar com cpf",
+        "meu cpf",
+        "login",
+        "acessar conta",
+        "entrar"
+      ]
+    },
+
+    {
+      "tag": "cadastrar",
+      "rota": "/cadastrar",
+      "respostas": [
+        "Vamos criar sua conta.",
+        "Perfeito! Vou iniciar seu cadastro.",
+        "Digite seus dados para criar sua conta."
+      ],
+      "padroes": [
+        "criar conta",
+        "abrir conta",
+        "quero me cadastrar",
+        "novo cadastro",
+        "fazer cadastro",
+        "cadastrar cliente",
+        "nova conta"
+      ]
+    },
+
+    {
+      "tag": "minha_conta",
+      "rota": "/minha-conta",
+      "respostas": [
+        "Aqui estão os dados da sua conta.",
+        "Vou consultar sua conta.",
+        "Buscando suas informações."
+      ],
+      "padroes": [
+        "minha conta",
+        "ver minha conta",
+        "meus dados",
+        "dados da conta",
+        "consultar conta",
+        "mostrar conta",
+        "informações da conta"
+      ]
+    },
+
+    {
+      "tag": "fatura",
+      "rota": "/minha-fatura",
+      "respostas": [
+        "Consultando sua fatura.",
+        "Aqui está sua fatura atual.",
+        "Buscando os lançamentos da sua fatura."
+      ],
+      "padroes": [
+        "minha fatura",
+        "ver fatura",
+        "consultar fatura",
+        "quanto devo",
+        "valor da fatura",
+        "lançamentos",
+        "compras do cartão",
+        "extrato do cartão"
+      ]
+    },
+
+    {
+      "tag": "bloquear_cartao",
+      "rota": "/bloquear-meu-cartao",
+      "respostas": [
+        "Seu cartão será bloqueado.",
+        "Bloqueando seu cartão.",
+        "Solicitação de bloqueio realizada."
+      ],
+      "padroes": [
+        "bloquear cartão",
+        "quero bloquear meu cartão",
+        "cartão roubado",
+        "cartão perdido",
+        "bloquear cartao",
+        "perdi meu cartão"
+      ]
+    },
+
+    {
+      "tag": "desbloquear_cartao",
+      "rota": "/desbloquear-meu-cartao",
+      "respostas": [
+        "Seu cartão será desbloqueado.",
+        "Desbloqueando seu cartão.",
+        "Solicitação de desbloqueio realizada."
+      ],
+      "padroes": [
+        "desbloquear cartão",
+        "liberar cartão",
+        "reativar cartão",
+        "desbloquear cartao",
+        "ativar cartão novamente"
+      ]
+    },
+
+    {
+      "tag": "compra",
+      "rota": "/compra",
+      "respostas": [
+        "Vamos registrar sua compra.",
+        "Informe os dados da compra.",
+        "Digite a descrição da compra."
+      ],
+      "padroes": [
+        "fazer compra",
+        "registrar compra",
+        "simular compra",
+        "nova compra",
+        "comprar",
+        "realizar compra"
+      ]
+    },
+
+    {
+      "tag": "atualizar_dados",
+      "rota": "/atualizar-meus-dados",
+      "respostas": [
+        "Quais dados deseja atualizar?",
+        "Vamos atualizar suas informações.",
+        "Informe o dado que deseja alterar."
+      ],
+      "padroes": [
+        "atualizar dados",
+        "alterar cpf",
+        "alterar nome",
+        "corrigir cadastro",
+        "editar meus dados",
+        "mudar nome",
+        "mudar cpf"
+      ]
+    },
+
+    {
+      "tag": "encerrar_conta",
+      "rota": "/encerrar-conta",
+      "respostas": [
+        "Tem certeza que deseja encerrar sua conta?",
+        "Sua conta poderá ser removida permanentemente.",
+        "Confirme o encerramento da conta."
+      ],
+      "padroes": [
+        "encerrar conta",
+        "deletar conta",
+        "excluir conta",
+        "cancelar conta",
+        "remover conta",
+        "apagar conta"
+      ]
+    },
+
+    {
+      "tag": "relatorio",
+      "rota": "/relatorio",
+      "respostas": [
+        "Gerando relatório do sistema.",
+        "Consultando estatísticas.",
+        "Buscando dados gerais."
+      ],
+      "padroes": [
+        "relatório",
+        "estatísticas",
+        "dados do sistema",
+        "total de clientes",
+        "clientes ativos",
+        "clientes bloqueados"
+      ]
+    },
+
+    {
+      "tag": "ajuda",
+      "rota": null,
+      "respostas": [
+        "Posso ajudar com faturas, compras, limites e cartões.",
+        "Você pode consultar conta, bloquear cartão e muito mais.",
+        "Digite o que deseja fazer."
+      ],
+      "padroes": [
+        "ajuda",
+        "help",
+        "o que você faz",
+        "comandos",
+        "menu",
+        "opções"
+      ]
+    },
+
+    {
+      "tag": "saudacao",
+      "rota": null,
+      "respostas": [
+        "Olá! Como posso ajudar?",
+        "Oi! Bem-vindo ao Banco Digital.",
+        "Olá! O que deseja fazer hoje?"
+      ],
+      "padroes": [
+        "oi",
+        "olá",
+        "bom dia",
+        "boa tarde",
+        "boa noite",
+        "e aí"
+      ]
+    },
+
+    {
+      "tag": "despedida",
+      "rota": null,
+      "respostas": [
+        "Até logo!",
+        "Obrigado por utilizar nosso sistema.",
+        "Tenha um ótimo dia!"
+      ],
+      "padroes": [
+        "tchau",
+        "até mais",
+        "encerrar",
+        "sair",
+        "logout"
+      ]
+    }
+  ]
+}
